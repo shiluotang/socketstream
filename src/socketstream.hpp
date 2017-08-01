@@ -149,43 +149,52 @@ namespace galik {
         typedef basic_socketbuf<char> socketbuf;
         typedef basic_socketbuf<wchar_t> wsocketbuf;
 
-        template <typename CharT>
-        class basic_socketstream : public std::basic_iostream<CharT> {
+        template <typename CharT, typename Traits = std::char_traits<CharT> >
+        class basic_socketstream : public std::basic_iostream<CharT, Traits> {
         public:
-            typedef std::basic_iostream<CharT> super;
+            typedef std::basic_iostream<CharT, Traits> super;
+            typedef basic_socketbuf<CharT, Traits> streambuffer;
             typedef typename super::char_type char_type;
-            typedef basic_socketbuf<char_type> buf_type;
+            typedef typename super::traits_type traits_type;
+            typedef typename super::int_type    int_type;
+            typedef typename super::pos_type    pos_type;
+            typedef typename super::off_type    off_type;
 
         protected:
-            buf_type buf;
+            streambuffer _M_buffer;
 
         public:
-            basic_socketstream() : super(&buf) {}
-            basic_socketstream(int s) : super(&buf) { buf.set_socket(s); }
+            basic_socketstream() : super(&_M_buffer) { }
+
+            basic_socketstream(int s) : super(&_M_buffer) {
+                _M_buffer.set_socket(s);
+            }
 
             void close() {
-                if (buf.get_socket() != 0)
-                    ::close(buf.get_socket());
+                if (_M_buffer.get_socket() != 0) {
+                    ::close(_M_buffer.get_socket());
+                    _M_buffer.set_socket(0);
+                }
                 super::clear();
             }
 
             bool open(const std::string &host, uint16_t port) {
                 this->close();
                 int sd = ::socket(AF_INET, SOCK_STREAM, 0);
-                sockaddr_in sin;
-                hostent *he = ::gethostbyname(host.c_str());
+                struct ::sockaddr_in sin;
+                struct ::hostent *he = ::gethostbyname(host.c_str());
 
-                std::copy(reinterpret_cast<char *>(he->h_addr),
-                          reinterpret_cast<char *>(he->h_addr) + he->h_length,
-                          reinterpret_cast<char *>(&sin.sin_addr.s_addr));
+                std::copy(reinterpret_cast<char*>(he->h_addr),
+                          reinterpret_cast<char*>(he->h_addr) + he->h_length,
+                          reinterpret_cast<char*>(&sin.sin_addr.s_addr));
                 sin.sin_family = AF_INET;
                 sin.sin_port = htons(port);
 
-                if (::connect(sd, reinterpret_cast<sockaddr*>(&sin),
+                if (::connect(sd, reinterpret_cast<struct ::sockaddr*>(&sin),
                             sizeof(sin)) < 0)
                     super::setstate(std::ios::failbit);
                 else
-                    buf.set_socket(sd);
+                    _M_buffer.set_socket(sd);
                 return *this;
             }
         };
