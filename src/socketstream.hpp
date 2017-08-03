@@ -106,8 +106,8 @@ namespace galik {
             int get_socket() { return this->sock; }
 
         protected:
-            int output_buffer() {
-                int num = super::pptr() - super::pbase();
+            int_type output_buffer() {
+                int_type num = super::pptr() - super::pbase();
                 if (send(sock, reinterpret_cast<char *>(_M_obuf), num * CHAR_SIZE,
                          0) != num)
                     return traits_type::eof();
@@ -137,7 +137,7 @@ namespace galik {
                     return *super::gptr();
 
                 int num;
-                if ((num = recv(sock, reinterpret_cast<char *>(_M_ibuf),
+                if ((num = ::recv(sock, reinterpret_cast<char *>(_M_ibuf),
                                 SIZE * CHAR_SIZE, 0)) <= 0)
                     return traits_type::eof();
 
