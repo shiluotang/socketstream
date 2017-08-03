@@ -275,18 +275,18 @@ namespace org {
             }
             ss >> length;
             clog << "http body length is " << length << endl;
-            shared_ptr<char> body(new char[length], std::default_delete<char[]>());
+            std::vector<char> body(length);
             streamsize nbytes;
             if (!ignore(ss, std::numeric_limits<streamsize>::max(), HTTP_HEADER_END)) {
                 clog << "Can't find end-of-http-header!" << endl;
                 return "";
             }
-            ss.read(body.get(), length);
+            ss.read(&body[0], body.size());
             nbytes = ss.gcount();
             if (nbytes != length)
                 clog << "something wrong!!!" << endl;
             ss.close();
-            return string(body.get(), length);
+            return string(&body[0], nbytes);
         }
 
         std::string http_get(url const &url) {
