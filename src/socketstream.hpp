@@ -107,7 +107,7 @@ public:
 protected:
     int_type output_buffer() {
         int_type num = super::pptr() - super::pbase();
-        if (send(sock, reinterpret_cast<char *>(_M_obuf), num * CHAR_SIZE,
+        if (::send(sock, reinterpret_cast<char *>(_M_obuf), num * CHAR_SIZE,
                  0) != num)
             return traits_type::eof();
         super::pbump(-num);
